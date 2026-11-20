@@ -59,6 +59,7 @@ jobs:
           HOMEBREW_NO_INSTALL_FROM_API: "1"
         run: |
           brew tap-new --no-git lactic-ci/local
+          brew trust lactic-ci/local
           tap="$(brew --repository)/Library/Taps/lactic-ci/homebrew-local"
           mkdir -p "$tap/Casks"
           cp Casks/lactic.rb "$tap/Casks/"
