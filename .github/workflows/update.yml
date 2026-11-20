@@ -1,0 +1,79 @@
+# Keeps Casks/lactic.rb on the latest Lactic release. No secrets: it only reads public
+# releases of blairj09/lactic and pushes to this repo with its own GITHUB_TOKEN.
+name: Update cask
+
+on:
+  schedule:
+    - cron: "17 */2 * * *" # every two hours
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["Casks/**", ".github/workflows/update.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-cask
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.latest.outputs.version }}
+      current: ${{ steps.latest.outputs.current }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api repos/blairj09/lactic/releases/latest --jq .tag_name)
+          version=${tag#v}
+          current=$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/lactic.rb)
+          echo "Latest release $version, cask has $current"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+
+  update:
+    # On a new release, or when the cask itself changed: test the install on a Mac, then push.
+    needs: check
+    if: needs.check.outputs.version != needs.check.outputs.current || github.event_name != 'schedule'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point the cask at the latest release
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          url="https://github.com/blairj09/lactic/releases/download/v${VERSION}/Lactic_${VERSION}_universal.dmg"
+          curl -fsSL --retry 4 -o lactic.dmg "$url"
+          sha=$(shasum -a 256 lactic.dmg | cut -d' ' -f1)
+          rm lactic.dmg
+          sed -i '' -e "s/^  version \".*\"$/  version \"${VERSION}\"/" -e "s/^  sha256 \".*\"$/  sha256 \"${sha}\"/" Casks/lactic.rb
+          git diff
+      - name: Check and install the cask
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_FROM_API: "1"
+        run: |
+          brew tap-new --no-git lactic-ci/local
+          tap="$(brew --repository)/Library/Taps/lactic-ci/homebrew-local"
+          mkdir -p "$tap/Casks"
+          cp Casks/lactic.rb "$tap/Casks/"
+          brew style --cask lactic-ci/local/lactic
+          brew audit --cask --strict lactic-ci/local/lactic
+          brew install --cask lactic-ci/local/lactic
+          test -d /Applications/Lactic.app
+          codesign --verify --deep --strict /Applications/Lactic.app
+          brew uninstall --cask lactic-ci/local/lactic
+      - name: Push
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          if git diff --quiet; then echo "Cask already up to date."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "lactic ${VERSION}"
+          git push
