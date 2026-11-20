@@ -2,8 +2,7 @@ cask "lactic" do
   version "0.3.8"
   sha256 "7c88586d62a8d0102a49cce033b4459124bf9d92a72864b16c599b011937574d"
 
-  url "https://github.com/blairj09/lactic/releases/download/v#{version}/Lactic_#{version}_universal.dmg",
-      verified: "github.com/blairj09/lactic/"
+  url "https://github.com/blairj09/lactic/releases/download/v#{version}/Lactic_#{version}_universal.dmg"
   name "Lactic"
   desc "Open-source structured cycling training"
   homepage "https://lactic.fit/"
