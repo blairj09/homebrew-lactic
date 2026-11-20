@@ -24,7 +24,7 @@ jobs:
       version: ${{ steps.latest.outputs.version }}
       current: ${{ steps.latest.outputs.current }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: latest
         env:
           GH_TOKEN: ${{ github.token }}
@@ -42,7 +42,7 @@ jobs:
     if: needs.check.outputs.version != needs.check.outputs.current || github.event_name != 'schedule'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Point the cask at the latest release
         env:
           VERSION: ${{ needs.check.outputs.version }}

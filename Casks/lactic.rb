@@ -15,7 +15,7 @@ cask "lactic" do
 
   # Lactic updates itself in the app; brew upgrade also works.
   auto_updates true
-  depends_on macos: ">= :big_sur"
+  depends_on macos: :big_sur
 
   app "Lactic.app"
 
