@@ -1,6 +1,6 @@
 cask "lactic" do
-  version "0.3.8"
-  sha256 "7c88586d62a8d0102a49cce033b4459124bf9d92a72864b16c599b011937574d"
+  version "0.3.9"
+  sha256 "00f91c44f0316030e236d1ce7a94fcc14c2538d9cbd20259c85041c9dcf7c562"
 
   url "https://github.com/blairj09/lactic/releases/download/v#{version}/Lactic_#{version}_universal.dmg"
   name "Lactic"
